@@ -7467,30 +7467,34 @@ var IS_GAS = (typeof google !== 'undefined' && google.script && google.script.ru
                 }
                 // Any other property = a backend function name.
                 // Return a function that fires the fetch.
-                return function() {
-                    var args = Array.prototype.slice.call(arguments);
-                    fetch(GAS_URL, {
-                        method: 'POST',
-                        // text/plain avoids CORS preflight
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: prop, payload: args }),
-                        redirect: 'follow'
-                    })
-                    .then(function(res) {
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
-                        return res.text();
-                    })
-                    .then(function(text) {
-                        var data;
-                        try { data = JSON.parse(text); }
-                        catch (e) { throw new Error('Bad JSON from backend: ' + text.slice(0, 120)); }
-                        if (success) success(data);
-                    })
-                    .catch(function(err) {
-                        console.error('API error (' + prop + '):', err);
-                        if (failure) failure(err);
-                    });
-                };
+                // Cari bahagian ini dalam index.html anda:
+return function() {
+    var args = Array.prototype.slice.call(arguments);
+    
+    // ✅ TUKAR KEPADA INI (Gunakan URLSearchParams)
+    var formData = new URLSearchParams();
+    formData.append('action', prop);
+    formData.append('payload', JSON.stringify(args));
+
+    fetch(GAS_URL, {
+        method: 'POST',
+        body: formData // Tidak perlu headers Content-Type
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+    })
+    .then(function(text) {
+        var data;
+        try { data = JSON.parse(text); }
+        catch (e) { throw new Error('Bad JSON from backend: ' + text.slice(0, 120)); }
+        if (success) success(data);
+    })
+    .catch(function(err) {
+        console.error('API error (' + prop + '):', err);
+        if (failure) failure(err);
+    });
+};
             }
         });
     }
